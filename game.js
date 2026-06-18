@@ -421,26 +421,19 @@ function pointToSegmentDistance(point, a, b) {
 }
 
 function makeTarget(level) {
-  const entrySide = Math.floor(rand(0, 3));
+  const entrySide = Math.floor(rand(0, 2));
   let current;
   let angle;
   if (entrySide === 0) {
-    const y = rand(10, 135);
-    const edgeX = 164 - (26 * (y + 32)) / 222 - 4;
-    current = { x: -edgeX, y };
-    angle = rand(-0.2, 0.2);
-  } else if (entrySide === 1) {
-    const y = rand(10, 135);
-    const edgeX = 164 - (26 * (y + 32)) / 222 - 4;
-    current = { x: edgeX, y };
-    angle = Math.PI + rand(-0.2, 0.2);
+    current = { x: rand(-165, -105), y: -178 };
+    angle = rand(0.75, 1.15);
   } else {
-    current = { x: rand(-105, 105), y: 184 };
-    angle = -Math.PI / 2 + rand(-0.2, 0.2);
+    current = { x: rand(105, 165), y: -178 };
+    angle = Math.PI - rand(0.75, 1.15);
   }
 
   const points = [current];
-  const safeBounds = { left: -124, right: 124, top: -118, bottom: 166 };
+  const safeBounds = { left: -124, right: 124, top: -148, bottom: 166 };
   const wanted = 10 + Math.min(4, Math.floor(level / 2));
 
   let attempts = 0;
@@ -834,15 +827,15 @@ function drawMachineArmOverlay() {
   const { x, y, w, h } = game.bg;
   ctx.save();
   ctx.beginPath();
-  ctx.moveTo(x + w * 0.39, y);
+  ctx.moveTo(x + w * 0.36, y);
   ctx.lineTo(x + w, y);
   ctx.lineTo(x + w, y + h * 0.57);
-  ctx.lineTo(x + w * 0.73, y + h * 0.57);
-  ctx.quadraticCurveTo(x + w * 0.7, y + h * 0.5, x + w * 0.71, y + h * 0.25);
+  ctx.lineTo(x + w * 0.75, y + h * 0.57);
+  ctx.quadraticCurveTo(x + w * 0.72, y + h * 0.47, x + w * 0.71, y + h * 0.25);
   ctx.lineTo(x + w * 0.51, y + h * 0.25);
-  ctx.quadraticCurveTo(x + w * 0.5, y + h * 0.34, x + w * 0.49, y + h * 0.44);
-  ctx.lineTo(x + w * 0.435, y + h * 0.44);
-  ctx.quadraticCurveTo(x + w * 0.41, y + h * 0.36, x + w * 0.39, y + h * 0.28);
+  ctx.lineTo(x + w * 0.495, y + h * 0.43);
+  ctx.lineTo(x + w * 0.41, y + h * 0.43);
+  ctx.quadraticCurveTo(x + w * 0.385, y + h * 0.34, x + w * 0.36, y + h * 0.27);
   ctx.closePath();
   ctx.clip();
   ctx.drawImage(assets.machine, x, y, w, h);
