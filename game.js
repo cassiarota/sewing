@@ -26,7 +26,7 @@ const assets = {
   prisonBars: new Image(),
 };
 assets.machine.src = "./assets/sewing-machine-table.png";
-assets.machineArm.src = "./assets/machine-arm-overlay.png?v=7";
+assets.machineArm.src = "./assets/machine-arm-overlay.png?v=8";
 assets.needle.src = "./assets/needle-overlay.png?v=7";
 assets.bun.src = "./assets/mantou.png";
 assets.garment.src = "./assets/garment-clean.png?v=3";
@@ -823,23 +823,9 @@ function drawMachineTableLayer() {
 }
 
 function drawMachineArmOverlay() {
-  if (!assets.machine.complete || !assets.machine.naturalWidth) return;
+  if (!assets.machineArm.complete || !assets.machineArm.naturalWidth) return;
   const { x, y, w, h } = game.bg;
-  ctx.save();
-  ctx.beginPath();
-  ctx.moveTo(x + w * 0.36, y);
-  ctx.lineTo(x + w, y);
-  ctx.lineTo(x + w, y + h * 0.57);
-  ctx.lineTo(x + w * 0.75, y + h * 0.57);
-  ctx.quadraticCurveTo(x + w * 0.72, y + h * 0.47, x + w * 0.71, y + h * 0.25);
-  ctx.lineTo(x + w * 0.51, y + h * 0.25);
-  ctx.lineTo(x + w * 0.495, y + h * 0.43);
-  ctx.lineTo(x + w * 0.41, y + h * 0.43);
-  ctx.quadraticCurveTo(x + w * 0.385, y + h * 0.34, x + w * 0.36, y + h * 0.27);
-  ctx.closePath();
-  ctx.clip();
-  ctx.drawImage(assets.machine, x, y, w, h);
-  ctx.restore();
+  ctx.drawImage(assets.machineArm, x, y, w, h);
 }
 
 function drawCloth() {
