@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>踩缝纫机</title>
+    <link rel="stylesheet" href="./style.css?v=7" />
+  </head>
+  <body>
+    <main class="game-shell">
+      <header class="topbar">
+        <h1>踩缝纫机</h1>
+        <div class="stat-strip" aria-live="polite">
+          <div>
+            <span>得分</span>
+            <strong id="scoreText">0</strong>
+          </div>
+          <div>
+            <span>进度</span>
+            <strong id="progressText">0%</strong>
+          </div>
+        </div>
+      </header>
+
+      <section class="stage-wrap" aria-label="踩缝纫机游戏">
+        <canvas id="gameCanvas" width="1280" height="760"></canvas>
+        <div class="pedal-controls" aria-label="脚踏板控制">
+          <button class="pedal-key" data-pedal="KeyJ" type="button" aria-label="踩 J 踏板">J</button>
+          <button class="pedal-key" data-pedal="KeyK" type="button" aria-label="踩 K 踏板">K</button>
+        </div>
+        <div id="modalOverlay" class="modal-overlay">
+          <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+            <h2 id="modalTitle">踩缝纫机</h2>
+            <p id="modalMessage">按 WASD 移动布料，按 J / K 踩踏板。</p>
+            <div class="modal-actions">
+              <button id="startBtn" type="button">开始游戏</button>
+              <button id="nextBtn" type="button" hidden>下一关</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="./game.js?v=7"></script>
+  </body>
+</html>

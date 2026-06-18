@@ -1,0 +1,77 @@
+name: Deploy Sewing Game
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-sewing-production
+  cancel-in-progress: true
+
+env:
+  DEPLOY_DIR: /opt/sewing/site
+
+jobs:
+  deploy:
+    name: Sync static game to VPS
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate static game
+        run: |
+          set -euo pipefail
+          test -f index.html
+          test -f style.css
+          test -f game.js
+          test -f assets/sewing-machine-table.png
+          test -f assets/machine-arm-overlay.png
+          test -f assets/needle-overlay.png
+          test -f assets/garment-clean.png
+
+      - name: Configure SSH
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT || '22' }}
+        run: |
+          set -euo pipefail
+          test -n "$DEPLOY_SSH_KEY"
+          test -n "$DEPLOY_HOST"
+          mkdir -p ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p "$DEPLOY_PORT" "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+
+      - name: Upload game
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT || '22' }}
+        run: |
+          set -euo pipefail
+          test -n "$DEPLOY_USER"
+          SSH="ssh -i ~/.ssh/deploy_key -p ${DEPLOY_PORT} ${DEPLOY_USER}@${DEPLOY_HOST}"
+          RSYNC_RSH="ssh -i ~/.ssh/deploy_key -p ${DEPLOY_PORT}"
+          $SSH "mkdir -p '${DEPLOY_DIR}'"
+          rsync -az --delete \
+            --exclude '.git/' \
+            --exclude '.github/' \
+            -e "$RSYNC_RSH" ./ "${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_DIR}/"
+
+      - name: Smoke test
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT || '22' }}
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/deploy_key -p "$DEPLOY_PORT" "$DEPLOY_USER@$DEPLOY_HOST" \
+            "test -f '${DEPLOY_DIR}/index.html' && curl -fsS http://127.0.0.1/sewing/ | grep -q '踩缝纫机'"
+          curl -fsS https://cassiangroup.uk/sewing/ | grep -q '踩缝纫机'
