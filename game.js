@@ -524,6 +524,7 @@ function resetLevel(nextLevel = game.level) {
   game.eventText = "";
   game.eventTimer = 0;
   game.modalTimer = 0;
+  game.thrownBuns = [];
   hideModal();
   updateStats();
 }
