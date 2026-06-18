@@ -73,5 +73,5 @@ jobs:
         run: |
           set -euo pipefail
           ssh -i ~/.ssh/deploy_key -p "$DEPLOY_PORT" "$DEPLOY_USER@$DEPLOY_HOST" \
-            "test -f '${DEPLOY_DIR}/index.html' && curl -fsS http://127.0.0.1/sewing/ | grep -q '踩缝纫机'"
-          curl -fsS https://cassiangroup.uk/sewing/ | grep -q '踩缝纫机'
+            "test -f '${DEPLOY_DIR}/index.html' && curl --retry 6 --retry-delay 2 --retry-all-errors -fsS http://127.0.0.1/sewing/ | grep -q '踩缝纫机'"
+          curl --retry 6 --retry-delay 2 --retry-all-errors -fsS https://cassiangroup.uk/sewing/ | grep -q '踩缝纫机'
