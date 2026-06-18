@@ -8,6 +8,9 @@ const progressText = document.querySelector("#progressText");
 const modalOverlay = document.querySelector("#modalOverlay");
 const modalTitle = document.querySelector("#modalTitle");
 const modalMessage = document.querySelector("#modalMessage");
+const leaderboardOverlay = document.querySelector("#leaderboardOverlay");
+const leaderboardRows = document.querySelector("#leaderboardRows");
+const leaderboardReturnBtn = document.querySelector("#leaderboardReturnBtn");
 const pedalButtons = [...document.querySelectorAll("[data-pedal]")];
 
 const keys = new Set();
@@ -20,12 +23,14 @@ const assets = {
   needle: new Image(),
   bun: new Image(),
   garment: new Image(),
+  prisonBars: new Image(),
 };
 assets.machine.src = "./assets/sewing-machine-table.png";
 assets.machineArm.src = "./assets/machine-arm-overlay.png?v=7";
 assets.needle.src = "./assets/needle-overlay.png?v=7";
 assets.bun.src = "./assets/mantou.png";
 assets.garment.src = "./assets/garment-clean.png?v=3";
+assets.prisonBars.src = "./assets/prison-bars-realistic.png";
 const garmentLayer = document.createElement("canvas");
 garmentLayer.width = 620;
 garmentLayer.height = 520;
@@ -81,6 +86,75 @@ const rand = (min, max) => min + Math.random() * (max - min);
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 const lerp = (a, b, t) => a + (b - a) * t;
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+
+const leaderboardNames = [
+  "陈志强",
+  "王秀兰",
+  "刘建国",
+  "李桂英",
+  "张伟",
+  "赵丽华",
+  "周明远",
+  "吴春梅",
+  "孙国庆",
+  "郑晓芳",
+  "冯文斌",
+  "褚慧敏",
+  "蒋德胜",
+  "沈玉兰",
+  "韩志勇",
+  "杨秋霞",
+  "朱海峰",
+  "何秀珍",
+];
+
+function shuffled(items) {
+  const result = [...items];
+  for (let i = result.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+function makeLeaderboard(playerScore) {
+  const score = Math.max(0, Math.round(playerScore));
+  const maxOpponentScore = Math.max(0, score - 1);
+  const opponents = shuffled(leaderboardNames)
+    .slice(0, 9)
+    .map((name) => ({
+      name,
+      score: maxOpponentScore ? Math.floor(Math.random() * (maxOpponentScore + 1)) : 0,
+    }))
+    .sort((a, b) => b.score - a.score);
+
+  return [
+    { rank: 1, name: "当前玩家", score, player: true },
+    ...opponents.map((entry, index) => ({ ...entry, rank: index + 2, player: false })),
+  ];
+}
+
+function renderLeaderboard(rows) {
+  const fragment = document.createDocumentFragment();
+  for (const row of rows) {
+    const item = document.createElement("li");
+    item.className = `leaderboard-row${row.player ? " player" : ""}`;
+
+    const rank = document.createElement("span");
+    rank.className = "leaderboard-rank";
+    rank.textContent = row.rank === 1 ? "第1名" : String(row.rank);
+
+    const name = document.createElement("span");
+    name.textContent = row.name;
+
+    const score = document.createElement("span");
+    score.textContent = String(row.score);
+
+    item.append(rank, name, score);
+    fragment.append(item);
+  }
+  leaderboardRows.replaceChildren(fragment);
+}
 
 function ensureAudio() {
   if (!audioContext) audioContext = new AudioContext();
@@ -259,6 +333,29 @@ function hideModal() {
   startBtn.hidden = true;
   exitBtn.hidden = true;
   nextBtn.hidden = true;
+}
+
+function showLeaderboard() {
+  renderLeaderboard(makeLeaderboard(game.score));
+  modalOverlay.classList.add("hidden");
+  leaderboardOverlay.classList.remove("hidden");
+}
+
+function hideLeaderboard() {
+  leaderboardOverlay.classList.add("hidden");
+}
+
+function returnToStart() {
+  keys.clear();
+  game.buns = 0;
+  game.thrownBuns = [];
+  resetLevel(1);
+  game.running = false;
+  game.activePedal = null;
+  game.stepRemaining = 0;
+  hideLeaderboard();
+  updateStats();
+  showStartModal();
 }
 
 function updateStats() {
@@ -701,13 +798,28 @@ function strokeTargetPath(targetCtx = ctx) {
   targetCtx.stroke();
 }
 
-function drawBackground() {
-  const gradient = ctx.createLinearGradient(0, 0, 0, game.height);
-  gradient.addColorStop(0, "#171311");
-  gradient.addColorStop(1, "#050505");
-  ctx.fillStyle = gradient;
+function drawPrisonBackground() {
+  ctx.fillStyle = "#080a0b";
   ctx.fillRect(0, 0, game.width, game.height);
+  if (assets.prisonBars.complete && assets.prisonBars.naturalWidth) {
+    const imageRatio = assets.prisonBars.naturalWidth / assets.prisonBars.naturalHeight;
+    const targetRatio = game.width / game.height;
+    let sx = 0;
+    let sy = 0;
+    let sw = assets.prisonBars.naturalWidth;
+    let sh = assets.prisonBars.naturalHeight;
+    if (imageRatio > targetRatio) {
+      sw = sh * targetRatio;
+      sx = (assets.prisonBars.naturalWidth - sw) / 2;
+    } else {
+      sh = sw / targetRatio;
+      sy = (assets.prisonBars.naturalHeight - sh) / 2;
+    }
+    ctx.drawImage(assets.prisonBars, sx, sy, sw, sh, 0, 0, game.width, game.height);
+  }
+}
 
+function drawMachineTableLayer() {
   if (assets.machine.complete && assets.machine.naturalWidth) {
     ctx.drawImage(assets.machine, game.bg.x, game.bg.y, game.bg.w, game.bg.h);
   } else {
@@ -718,12 +830,23 @@ function drawBackground() {
 }
 
 function drawMachineArmOverlay() {
-  if (!assets.machineArm.complete || !assets.machineArm.naturalWidth) return;
+  if (!assets.machine.complete || !assets.machine.naturalWidth) return;
   const { x, y, w, h } = game.bg;
-  ctx.drawImage(assets.machineArm, x, y, w, h);
-  if (assets.needle.complete && assets.needle.naturalWidth) {
-    ctx.drawImage(assets.needle, x, y, w, h);
-  }
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(x + w * 0.39, y);
+  ctx.lineTo(x + w, y);
+  ctx.lineTo(x + w, y + h * 0.57);
+  ctx.lineTo(x + w * 0.73, y + h * 0.57);
+  ctx.quadraticCurveTo(x + w * 0.7, y + h * 0.5, x + w * 0.71, y + h * 0.25);
+  ctx.lineTo(x + w * 0.51, y + h * 0.25);
+  ctx.quadraticCurveTo(x + w * 0.5, y + h * 0.34, x + w * 0.49, y + h * 0.44);
+  ctx.lineTo(x + w * 0.435, y + h * 0.44);
+  ctx.quadraticCurveTo(x + w * 0.41, y + h * 0.36, x + w * 0.39, y + h * 0.28);
+  ctx.closePath();
+  ctx.clip();
+  ctx.drawImage(assets.machine, x, y, w, h);
+  ctx.restore();
 }
 
 function drawCloth() {
@@ -862,7 +985,8 @@ function drawScene() {
   ctx.save();
   ctx.translate(sx, sy);
 
-  drawBackground();
+  drawPrisonBackground();
+  drawMachineTableLayer();
   drawCloth();
   drawMachineArmOverlay();
   for (const bun of game.thrownBuns) {
@@ -992,16 +1116,10 @@ startBtn.addEventListener("click", () => {
 });
 
 exitBtn.addEventListener("click", () => {
-  keys.clear();
-  game.buns = 0;
-  game.thrownBuns = [];
-  resetLevel(1);
-  game.running = false;
-  game.activePedal = null;
-  game.stepRemaining = 0;
-  updateStats();
-  showStartModal();
+  showLeaderboard();
 });
+
+leaderboardReturnBtn.addEventListener("click", returnToStart);
 
 nextBtn.addEventListener("click", () => {
   ensureAudio();
@@ -1014,6 +1132,7 @@ assets.machineArm.addEventListener("load", resizeCanvas);
 assets.needle.addEventListener("load", resizeCanvas);
 assets.bun.addEventListener("load", resizeCanvas);
 assets.garment.addEventListener("load", resizeCanvas);
+assets.prisonBars.addEventListener("load", resizeCanvas);
 resizeCanvas();
 game.target = makeTarget(1);
 computeLengths(game.target);

@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>踩缝纫机</title>
-    <link rel="stylesheet" href="./style.css?v=10" />
+    <link rel="stylesheet" href="./style.css?v=11" />
   </head>
   <body>
     <main class="game-shell">
@@ -45,9 +45,27 @@
             </div>
           </div>
         </div>
+        <div id="leaderboardOverlay" class="leaderboard-overlay hidden">
+          <div
+            class="leaderboard-card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="leaderboardTitle"
+          >
+            <h2 id="leaderboardTitle">本局排行榜</h2>
+            <p>你的手艺稳稳排在第一</p>
+            <div class="leaderboard-heading" aria-hidden="true">
+              <span>名次</span>
+              <span>玩家</span>
+              <span>得分</span>
+            </div>
+            <ol id="leaderboardRows" class="leaderboard-rows" aria-label="排行榜"></ol>
+            <button id="leaderboardReturnBtn" type="button">返回主界面</button>
+          </div>
+        </div>
       </section>
     </main>
 
-    <script src="./game.js?v=10"></script>
+    <script src="./game.js?v=15"></script>
   </body>
 </html>

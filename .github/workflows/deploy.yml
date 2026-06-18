@@ -34,6 +34,7 @@ jobs:
           test -f assets/machine-arm-overlay.png
           test -f assets/needle-overlay.png
           test -f assets/garment-clean.png
+          test -f assets/prison-bars-realistic.png
 
       - name: Configure SSH
         env:

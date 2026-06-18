@@ -179,6 +179,108 @@ canvas {
   pointer-events: none;
 }
 
+.leaderboard-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  display: grid;
+  place-items: center;
+  padding: 14px;
+  background: rgba(0, 0, 0, 0.7);
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity 180ms ease;
+}
+
+.leaderboard-overlay.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.leaderboard-card {
+  width: min(430px, calc(100vw - 28px));
+  max-height: calc(100% - 20px);
+  overflow: hidden;
+  padding: 18px 22px 20px;
+  border: 1px solid rgba(240, 192, 103, 0.5);
+  border-radius: 8px;
+  background: rgba(19, 17, 15, 0.97);
+  color: #fff7eb;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.58);
+  text-align: center;
+}
+
+.leaderboard-card h2 {
+  margin: 0;
+  color: #fff7eb;
+  font-size: 26px;
+  letter-spacing: 0;
+}
+
+.leaderboard-card > p {
+  margin: 5px 0 12px;
+  color: #d8bd95;
+  font-size: 14px;
+}
+
+.leaderboard-heading,
+.leaderboard-row {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) 72px;
+  align-items: center;
+  column-gap: 8px;
+}
+
+.leaderboard-heading {
+  min-height: 27px;
+  padding: 0 10px;
+  color: #a99578;
+  font-size: 12px;
+  text-align: left;
+}
+
+.leaderboard-heading span:last-child,
+.leaderboard-row span:last-child {
+  text-align: right;
+}
+
+.leaderboard-rows {
+  margin: 0 0 14px;
+  padding: 0;
+  list-style: none;
+}
+
+.leaderboard-row {
+  min-height: 31px;
+  padding: 0 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  color: #e7d8c2;
+  font-size: 14px;
+  text-align: left;
+}
+
+.leaderboard-row.player {
+  min-height: 36px;
+  border: 1px solid rgba(255, 210, 113, 0.62);
+  background: linear-gradient(90deg, rgba(151, 98, 30, 0.58), rgba(66, 42, 20, 0.52));
+  color: #ffe4a3;
+  font-weight: 900;
+}
+
+.leaderboard-rank {
+  color: #b8a488;
+  font-weight: 800;
+}
+
+.leaderboard-row.player .leaderboard-rank {
+  color: #ffd271;
+}
+
+.leaderboard-card button {
+  min-width: 156px;
+}
+
 .modal-card {
   width: min(380px, calc(100vw - 40px));
   padding: 24px;
@@ -266,5 +368,26 @@ button[hidden] {
     width: 92px;
     height: 72px;
     font-size: 16px;
+  }
+
+  .leaderboard-card {
+    padding: 14px 14px 16px;
+  }
+
+  .leaderboard-card h2 {
+    font-size: 22px;
+  }
+
+  .leaderboard-card > p {
+    margin-bottom: 8px;
+  }
+
+  .leaderboard-heading,
+  .leaderboard-row {
+    grid-template-columns: 44px minmax(0, 1fr) 64px;
+  }
+
+  .leaderboard-row {
+    min-height: 29px;
   }
 }
