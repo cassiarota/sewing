@@ -1,6 +1,7 @@
 const canvas = document.querySelector("#gameCanvas");
 const ctx = canvas.getContext("2d");
 const startBtn = document.querySelector("#startBtn");
+const exitBtn = document.querySelector("#exitBtn");
 const nextBtn = document.querySelector("#nextBtn");
 const scoreText = document.querySelector("#scoreText");
 const progressText = document.querySelector("#progressText");
@@ -223,10 +224,10 @@ function resizeCanvas() {
     w,
     h,
   };
-  game.needle.x = game.bg.x + game.bg.w * 0.405;
-  game.needle.y = game.bg.y + game.bg.h * 0.43;
+  game.needle.x = game.bg.x + game.bg.w * 0.4515;
+  game.needle.y = game.bg.y + game.bg.h * 0.418;
   game.tableY = game.bg.y + game.bg.h * 0.78;
-  game.clothScale = clamp(game.bg.w / 1700, 0.55, 0.9);
+  game.clothScale = clamp((game.bg.w / 1700) * 1.2, 0.66, 1.08);
   const mobileUserAgent = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
   const touchPrimary = matchMedia("(pointer: coarse)").matches && navigator.maxTouchPoints > 0;
   game.isMobile = mobileUserAgent || touchPrimary;
@@ -239,14 +240,16 @@ function showStartModal() {
     ? "按住衣服滑动方向，交替点 J / K 踩踏板。"
     : "按 WASD 移动布料，交替按住 J / K 踩踏板。";
   startBtn.hidden = false;
+  exitBtn.hidden = true;
   nextBtn.hidden = true;
   modalOverlay.classList.remove("hidden");
 }
 
 function showNextModal() {
   modalTitle.textContent = `第 ${game.level} 件完成`;
-  modalMessage.textContent = `本关得分 ${game.score}，点击进入下一关。`;
+  modalMessage.textContent = `本关得分 ${game.score}，继续下一关或退出游戏。`;
   startBtn.hidden = true;
+  exitBtn.hidden = false;
   nextBtn.hidden = false;
   modalOverlay.classList.remove("hidden");
 }
@@ -254,6 +257,7 @@ function showNextModal() {
 function hideModal() {
   modalOverlay.classList.add("hidden");
   startBtn.hidden = true;
+  exitBtn.hidden = true;
   nextBtn.hidden = true;
 }
 
@@ -282,41 +286,97 @@ function segmentIntersects(a, b, c, d) {
   return ccw(a, c, d) !== ccw(b, c, d) && ccw(a, b, c) !== ccw(a, b, d);
 }
 
+const garmentOutline = [
+  { x: -190, y: -185 },
+  { x: -70, y: -185 },
+  { x: -42, y: -153 },
+  { x: 0, y: -147 },
+  { x: 42, y: -153 },
+  { x: 70, y: -185 },
+  { x: 190, y: -185 },
+  { x: 252, y: -78 },
+  { x: 164, y: -32 },
+  { x: 138, y: 190 },
+  { x: -138, y: 190 },
+  { x: -164, y: -32 },
+  { x: -252, y: -78 },
+];
+
+function pointInGarment(point) {
+  let inside = false;
+  for (let i = 0, j = garmentOutline.length - 1; i < garmentOutline.length; j = i, i += 1) {
+    const a = garmentOutline[i];
+    const b = garmentOutline[j];
+    const crosses =
+      a.y > point.y !== b.y > point.y &&
+      point.x < ((b.x - a.x) * (point.y - a.y)) / (b.y - a.y) + a.x;
+    if (crosses) inside = !inside;
+  }
+  return inside;
+}
+
+function pointToSegmentDistance(point, a, b) {
+  const vx = b.x - a.x;
+  const vy = b.y - a.y;
+  const lenSq = vx * vx + vy * vy || 1;
+  const t = clamp(((point.x - a.x) * vx + (point.y - a.y) * vy) / lenSq, 0, 1);
+  return dist(point, { x: a.x + vx * t, y: a.y + vy * t });
+}
+
 function makeTarget(level) {
-  const points = [];
-  const bounds = { left: -265, right: 265, top: -180, bottom: 190 };
-  let current = { x: rand(-190, -100), y: rand(-110, 110) };
-  let angle = rand(-0.6, 0.6);
-  const wanted = 14 + Math.min(8, level * 2);
-  points.push(current);
+  const entrySide = Math.floor(rand(0, 3));
+  let current;
+  let angle;
+  if (entrySide === 0) {
+    const y = rand(10, 135);
+    const edgeX = 164 - (26 * (y + 32)) / 222 - 4;
+    current = { x: -edgeX, y };
+    angle = rand(-0.2, 0.2);
+  } else if (entrySide === 1) {
+    const y = rand(10, 135);
+    const edgeX = 164 - (26 * (y + 32)) / 222 - 4;
+    current = { x: edgeX, y };
+    angle = Math.PI + rand(-0.2, 0.2);
+  } else {
+    current = { x: rand(-105, 105), y: 184 };
+    angle = -Math.PI / 2 + rand(-0.2, 0.2);
+  }
+
+  const points = [current];
+  const safeBounds = { left: -124, right: 124, top: -118, bottom: 166 };
+  const wanted = 10 + Math.min(4, Math.floor(level / 2));
 
   let attempts = 0;
-  while (points.length < wanted && attempts < 900) {
+  while (points.length < wanted && attempts < 1200) {
     attempts += 1;
-    angle += rand(-1.0, 1.0);
-    const step = rand(42, 78);
+    angle += rand(-0.48, 0.48);
+    const step = rand(50, 76);
     const next = {
       x: current.x + Math.cos(angle) * step,
       y: current.y + Math.sin(angle) * step,
     };
     if (
-      next.x < bounds.left ||
-      next.x > bounds.right ||
-      next.y < bounds.top ||
-      next.y > bounds.bottom
+      next.x < safeBounds.left ||
+      next.x > safeBounds.right ||
+      next.y < safeBounds.top ||
+      next.y > safeBounds.bottom ||
+      !pointInGarment(next)
     ) {
-      angle += Math.PI * rand(0.55, 0.95);
+      angle += Math.PI * rand(0.45, 0.75);
       continue;
     }
 
-    let crosses = false;
+    let conflicts = false;
     for (let i = 0; i < points.length - 2; i += 1) {
-      if (segmentIntersects(points[i], points[i + 1], current, next)) {
-        crosses = true;
+      if (
+        segmentIntersects(points[i], points[i + 1], current, next) ||
+        pointToSegmentDistance(next, points[i], points[i + 1]) < 38
+      ) {
+        conflicts = true;
         break;
       }
     }
-    if (!crosses) {
+    if (!conflicts) {
       points.push(next);
       current = next;
     }
@@ -450,28 +510,31 @@ function finishLevel() {
   game.running = false;
   game.finished = true;
   game.score = calculateScore();
-  game.modalTimer = 1.25;
+  game.modalTimer = 2.6;
 
   if (game.score > 60) {
-    game.buns += 1;
-    game.thrownBuns.push({
-      x: game.width + 170,
-      y: game.bg.y + game.bg.h * 0.08,
-      vx: -620,
-      vy: 230,
-      spin: rand(-4, 4),
-      r: 0,
-      size: Math.min(230, game.bg.w * 0.18),
-      bounces: 0,
-    });
-    game.eventText = "奖励你一个馒头";
-    game.eventTimer = 1.8;
+    game.buns += 2;
+    for (let i = 0; i < 2; i += 1) {
+      game.thrownBuns.push({
+        x: game.width + 150 + i * 105,
+        y: game.bg.y + game.bg.h * (0.06 + i * 0.05),
+        vx: -610 - i * 75,
+        vy: 180 + i * 55,
+        spin: rand(-4, 4),
+        r: 0,
+        size: Math.min(230, game.bg.w * 0.18),
+        bounces: 0,
+      });
+    }
+    game.modalTimer = 3.2;
+    game.eventText = "奖励你两个馒头";
+    game.eventTimer = 3;
   } else {
     game.flash = 1;
     game.shake = 34;
     game.whipTimer = 0.95;
     game.eventText = "挨了一鞭";
-    game.eventTimer = 1.8;
+    game.eventTimer = 2.4;
     playWhipSound();
   }
   updateStats();
@@ -560,9 +623,20 @@ function update(dt, now) {
   game.cloth.x = clamp(game.cloth.x, -game.bg.w * 0.43, game.bg.w * 0.34);
   game.cloth.y = clamp(game.cloth.y, -game.bg.h * 0.36, game.bg.h * 0.3);
 
+  const needlePoint = needleInCloth();
+  const needleOnGarment = pointInGarment(needlePoint);
+  if (canFeed && needleOnGarment) {
+    game.shake = Math.max(game.shake, 1.4);
+  }
+
   const stitchInterval = clamp(320 - game.wheelRpm * 0.34, 42, 260);
-  if (canFeed && game.wheelRpm > 90 && now - game.lastStitchAt >= stitchInterval) {
-    const p = needleInCloth();
+  if (
+    canFeed &&
+    needleOnGarment &&
+    game.wheelRpm > 90 &&
+    now - game.lastStitchAt >= stitchInterval
+  ) {
+    const p = needlePoint;
     const previous = game.stitches[game.stitches.length - 1];
     const gap = previous ? dist(previous, p) : 17;
     const nearest = nearestOnTarget(p);
@@ -819,7 +893,6 @@ function pressPedal(code) {
     game.stepRemaining = 46 * game.clothScale;
     game.expectedPedal = code === "KeyJ" ? "KeyK" : "KeyJ";
     game.rhythm = clamp(game.rhythm + 0.12, 0, 1);
-    game.shake = Math.max(game.shake, 1.4);
     game.blockedMoveTime = 0;
     playSewingSound();
   } else {
@@ -916,6 +989,18 @@ startBtn.addEventListener("click", () => {
   game.buns = 0;
   game.thrownBuns = [];
   resetLevel(1);
+});
+
+exitBtn.addEventListener("click", () => {
+  keys.clear();
+  game.buns = 0;
+  game.thrownBuns = [];
+  resetLevel(1);
+  game.running = false;
+  game.activePedal = null;
+  game.stepRemaining = 0;
+  updateStats();
+  showStartModal();
 });
 
 nextBtn.addEventListener("click", () => {
