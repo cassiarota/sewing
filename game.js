@@ -25,12 +25,23 @@ const assets = {
   garment: new Image(),
   prisonBars: new Image(),
 };
-assets.machine.src = "./assets/sewing-machine-table.png";
-assets.machineArm.src = "./assets/machine-arm-overlay.png?v=8";
-assets.needle.src = "./assets/needle-overlay.png?v=7";
-assets.bun.src = "./assets/mantou.png";
-assets.garment.src = "./assets/garment-clean.png?v=3";
-assets.prisonBars.src = "./assets/prison-bars-realistic.png";
+function loadOptimizedAsset(image, name) {
+  image.addEventListener(
+    "error",
+    () => {
+      image.src = `./assets/${name}.png`;
+    },
+    { once: true },
+  );
+  image.src = `./assets/${name}.webp`;
+}
+
+loadOptimizedAsset(assets.machine, "sewing-machine-table");
+loadOptimizedAsset(assets.machineArm, "machine-arm-overlay");
+loadOptimizedAsset(assets.needle, "needle-overlay");
+loadOptimizedAsset(assets.bun, "mantou");
+loadOptimizedAsset(assets.garment, "garment-clean");
+loadOptimizedAsset(assets.prisonBars, "prison-bars-realistic");
 const garmentLayer = document.createElement("canvas");
 garmentLayer.width = 620;
 garmentLayer.height = 520;
@@ -277,8 +288,12 @@ function makeFabricPattern(hue, saturation, lightness) {
 function resizeCanvas() {
   const rect = canvas.getBoundingClientRect();
   const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-  canvas.width = Math.round(rect.width * dpr);
-  canvas.height = Math.round(rect.height * dpr);
+  const pixelWidth = Math.max(1, Math.round(rect.width * dpr));
+  const pixelHeight = Math.max(1, Math.round(rect.height * dpr));
+  if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
+    canvas.width = pixelWidth;
+    canvas.height = pixelHeight;
+  }
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   game.width = rect.width;
   game.height = rect.height;
@@ -316,7 +331,9 @@ function showStartModal() {
   startBtn.hidden = false;
   exitBtn.hidden = true;
   nextBtn.hidden = true;
+  modalOverlay.setAttribute("aria-hidden", "false");
   modalOverlay.classList.remove("hidden");
+  startBtn.focus();
 }
 
 function showNextModal() {
@@ -325,11 +342,14 @@ function showNextModal() {
   startBtn.hidden = true;
   exitBtn.hidden = false;
   nextBtn.hidden = false;
+  modalOverlay.setAttribute("aria-hidden", "false");
   modalOverlay.classList.remove("hidden");
+  nextBtn.focus();
 }
 
 function hideModal() {
   modalOverlay.classList.add("hidden");
+  modalOverlay.setAttribute("aria-hidden", "true");
   startBtn.hidden = true;
   exitBtn.hidden = true;
   nextBtn.hidden = true;
@@ -338,11 +358,15 @@ function hideModal() {
 function showLeaderboard() {
   renderLeaderboard(makeLeaderboard(game.score));
   modalOverlay.classList.add("hidden");
+  modalOverlay.setAttribute("aria-hidden", "true");
+  leaderboardOverlay.setAttribute("aria-hidden", "false");
   leaderboardOverlay.classList.remove("hidden");
+  leaderboardReturnBtn.focus();
 }
 
 function hideLeaderboard() {
   leaderboardOverlay.classList.add("hidden");
+  leaderboardOverlay.setAttribute("aria-hidden", "true");
 }
 
 function returnToStart() {
@@ -649,8 +673,6 @@ function updateThrownBuns(dt) {
 }
 
 function update(dt, now) {
-  resizeCanvas();
-
   game.score = game.finished ? game.score : calculateScore();
   game.shake = Math.max(0, game.shake - dt * 22);
   game.flash = Math.max(0, game.flash - dt * 1.8);
@@ -1016,6 +1038,18 @@ function releasePedal(code, preserveMobileStep = false) {
   updateStats();
 }
 
+function releaseAllControls() {
+  keys.clear();
+  game.activePedal = null;
+  game.stepRemaining = 0;
+  game.touchDragging = false;
+  game.touchPointerId = null;
+  game.touchMoveX = 0;
+  game.touchMoveY = 0;
+  game.touchMoveGrace = 0;
+  updateStats();
+}
+
 window.addEventListener("keydown", (event) => {
   if (!["KeyW", "KeyA", "KeyS", "KeyD", "KeyJ", "KeyK"].includes(event.code)) return;
   event.preventDefault();
@@ -1027,6 +1061,11 @@ window.addEventListener("keydown", (event) => {
 
 window.addEventListener("keyup", (event) => {
   releasePedal(event.code, false);
+});
+
+window.addEventListener("blur", releaseAllControls);
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) releaseAllControls();
 });
 
 for (const button of pedalButtons) {

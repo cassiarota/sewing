@@ -176,6 +176,7 @@ canvas {
 
 .modal-overlay.hidden {
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
 }
 
@@ -337,6 +338,11 @@ button:hover {
 button:active {
   transform: translateY(5px);
   box-shadow: 0 2px 0 #8c5530;
+}
+
+button:focus-visible {
+  outline: 3px solid #fff1b8;
+  outline-offset: 4px;
 }
 
 button[hidden] {
