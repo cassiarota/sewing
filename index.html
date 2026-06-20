@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>踩缝纫机</title>
     <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="./style.css?v=12" />
+    <link rel="stylesheet" href="./style.css?v=13" />
   </head>
   <body>
     <main class="game-shell">
@@ -53,20 +53,34 @@
             aria-modal="true"
             aria-labelledby="leaderboardTitle"
           >
-            <h2 id="leaderboardTitle">本局排行榜</h2>
-            <p>你的手艺稳稳排在第一</p>
+            <h2 id="leaderboardTitle">排行榜</h2>
+            <p id="leaderboardMessage">正在读取 Top 100…</p>
+            <form id="leaderboardForm" class="leaderboard-form" hidden>
+              <label for="playerName">你的名字</label>
+              <div>
+                <input
+                  id="playerName"
+                  name="playerName"
+                  type="text"
+                  maxlength="20"
+                  autocomplete="nickname"
+                  placeholder="留空则为匿名用户"
+                />
+                <button id="leaderboardSubmitBtn" type="submit">确认上榜</button>
+              </div>
+            </form>
             <div class="leaderboard-heading" aria-hidden="true">
               <span>名次</span>
               <span>玩家</span>
               <span>得分</span>
             </div>
             <ol id="leaderboardRows" class="leaderboard-rows" aria-label="排行榜"></ol>
-            <button id="leaderboardReturnBtn" type="button">返回主界面</button>
+            <button id="leaderboardReturnBtn" type="button" hidden>返回主界面</button>
           </div>
         </div>
       </section>
     </main>
 
-    <script src="./game.js?v=20"></script>
+    <script src="./game.js?v=21"></script>
   </body>
 </html>

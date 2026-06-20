@@ -225,6 +225,38 @@ canvas {
   font-size: 14px;
 }
 
+.leaderboard-form {
+  margin: 0 0 12px;
+  text-align: left;
+}
+
+.leaderboard-form label {
+  display: block;
+  margin-bottom: 6px;
+  color: #d8bd95;
+  font-size: 13px;
+}
+
+.leaderboard-form > div {
+  display: flex;
+  gap: 8px;
+}
+
+.leaderboard-form input {
+  min-width: 0;
+  flex: 1;
+  padding: 9px 10px;
+  border: 1px solid rgba(240, 192, 103, 0.5);
+  border-radius: 5px;
+  background: #0f0d0b;
+  color: #fff7eb;
+  font: inherit;
+}
+
+.leaderboard-card .leaderboard-form button {
+  min-width: 92px;
+}
+
 .leaderboard-heading,
 .leaderboard-row {
   display: grid;
@@ -247,8 +279,10 @@ canvas {
 }
 
 .leaderboard-rows {
+  max-height: min(390px, 48vh);
   margin: 0 0 14px;
   padding: 0;
+  overflow-y: auto;
   list-style: none;
 }
 

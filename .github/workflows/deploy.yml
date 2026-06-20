@@ -31,6 +31,7 @@ jobs:
           test -f favicon.svg
           test -f style.css
           test -f game.js
+          test -f data/leaderboard.json
           test -f assets/sewing-machine-table.png
           test -f assets/sewing-machine-table.webp
           test -f assets/machine-arm-overlay.png
@@ -44,6 +45,7 @@ jobs:
           test -f assets/prison-bars-realistic.png
           test -f assets/prison-bars-realistic.webp
           node --check game.js
+          node -e "JSON.parse(require('fs').readFileSync('data/leaderboard.json', 'utf8'))"
 
       - name: Configure SSH
         env:
