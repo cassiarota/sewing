@@ -857,15 +857,9 @@ function drawCloth() {
   garmentCtx.clearRect(0, 0, garmentLayer.width, garmentLayer.height);
   garmentCtx.save();
   garmentCtx.translate(garmentLayer.width / 2, garmentLayer.height / 2);
-  drawGarmentPath(garmentCtx);
-  garmentCtx.clip();
 
   if (assets.garment.complete && assets.garment.naturalWidth) {
-    garmentCtx.drawImage(assets.garment, -280, -220, 560, 460);
-    garmentCtx.globalCompositeOperation = "multiply";
-    garmentCtx.fillStyle = `hsl(${game.garment.hue} 48% 68%)`;
-    garmentCtx.fillRect(-310, -260, 620, 520);
-    garmentCtx.globalCompositeOperation = "source-over";
+    garmentCtx.drawImage(assets.garment, -310, -260, 620, 520);
   }
 
   garmentCtx.strokeStyle = "#c9352c";
