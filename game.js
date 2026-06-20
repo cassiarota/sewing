@@ -10,10 +10,6 @@ const modalTitle = document.querySelector("#modalTitle");
 const modalMessage = document.querySelector("#modalMessage");
 const leaderboardOverlay = document.querySelector("#leaderboardOverlay");
 const leaderboardRows = document.querySelector("#leaderboardRows");
-const leaderboardMessage = document.querySelector("#leaderboardMessage");
-const leaderboardForm = document.querySelector("#leaderboardForm");
-const playerNameInput = document.querySelector("#playerName");
-const leaderboardSubmitBtn = document.querySelector("#leaderboardSubmitBtn");
 const leaderboardReturnBtn = document.querySelector("#leaderboardReturnBtn");
 const pedalButtons = [...document.querySelectorAll("[data-pedal]")];
 
@@ -102,58 +98,62 @@ const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 const lerp = (a, b, t) => a + (b - a) * t;
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 
-const leaderboardUrl = "./data/leaderboard.json";
-let leaderboard = [];
-let submittedEntryId = null;
+const leaderboardNames = [
+  "陈志强",
+  "王秀兰",
+  "刘建国",
+  "李桂英",
+  "张伟",
+  "赵丽华",
+  "周明远",
+  "吴春梅",
+  "孙国庆",
+  "郑晓芳",
+  "冯文斌",
+  "褚慧敏",
+  "蒋德胜",
+  "沈玉兰",
+  "韩志勇",
+  "杨秋霞",
+  "朱海峰",
+  "何秀珍",
+];
 
-function normalizeLeaderboard(data) {
-  const entries = Array.isArray(data?.entries) ? data.entries : [];
-  return entries
-    .filter(
-      (entry) =>
-        entry &&
-        typeof entry.id === "string" &&
-        typeof entry.name === "string" &&
-        Number.isFinite(entry.score),
-    )
-    .map((entry) => ({
-      id: entry.id.slice(0, 80),
-      name: entry.name.trim().slice(0, 20) || "匿名用户",
-      score: Math.max(0, Math.round(entry.score)),
-      createdAt: typeof entry.createdAt === "string" ? entry.createdAt : "",
+function shuffled(items) {
+  const result = [...items];
+  for (let i = result.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+function makeLeaderboard(playerScore) {
+  const score = Math.max(0, Math.round(playerScore));
+  const maxOpponentScore = Math.max(0, score - 1);
+  const opponents = shuffled(leaderboardNames)
+    .slice(0, 9)
+    .map((name) => ({
+      name,
+      score: maxOpponentScore ? Math.floor(Math.random() * (maxOpponentScore + 1)) : 0,
     }))
-    .sort((a, b) => b.score - a.score || a.createdAt.localeCompare(b.createdAt))
-    .slice(0, 100);
-}
+    .sort((a, b) => b.score - a.score);
 
-async function loadLeaderboard() {
-  const response = await fetch(`${leaderboardUrl}?t=${Date.now()}`, { cache: "no-store" });
-  if (!response.ok) throw new Error(`读取排行榜失败（${response.status}）`);
-  return normalizeLeaderboard(await response.json());
-}
-
-async function saveLeaderboard(entries) {
-  const response = await fetch(leaderboardUrl, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ version: 1, updatedAt: new Date().toISOString(), entries }),
-  });
-  if (!response.ok) throw new Error(`保存排行榜失败（${response.status}）`);
-}
-
-function scoreQualifies(entries, score) {
-  return entries.length < 100 || score > entries[entries.length - 1].score;
+  return [
+    { rank: 1, name: "当前玩家", score, player: true },
+    ...opponents.map((entry, index) => ({ ...entry, rank: index + 2, player: false })),
+  ];
 }
 
 function renderLeaderboard(rows) {
   const fragment = document.createDocumentFragment();
-  rows.forEach((row, index) => {
+  for (const row of rows) {
     const item = document.createElement("li");
-    item.className = `leaderboard-row${row.id === submittedEntryId ? " player" : ""}`;
+    item.className = `leaderboard-row${row.player ? " player" : ""}`;
 
     const rank = document.createElement("span");
     rank.className = "leaderboard-rank";
-    rank.textContent = index === 0 ? "第1名" : String(index + 1);
+    rank.textContent = row.rank === 1 ? "第1名" : String(row.rank);
 
     const name = document.createElement("span");
     name.textContent = row.name;
@@ -163,7 +163,7 @@ function renderLeaderboard(rows) {
 
     item.append(rank, name, score);
     fragment.append(item);
-  });
+  }
   leaderboardRows.replaceChildren(fragment);
 }
 
@@ -355,76 +355,13 @@ function hideModal() {
   nextBtn.hidden = true;
 }
 
-async function showLeaderboard() {
+function showLeaderboard() {
+  renderLeaderboard(makeLeaderboard(game.score));
   modalOverlay.classList.add("hidden");
   modalOverlay.setAttribute("aria-hidden", "true");
   leaderboardOverlay.setAttribute("aria-hidden", "false");
   leaderboardOverlay.classList.remove("hidden");
-  leaderboardRows.replaceChildren();
-  leaderboardForm.hidden = true;
-  leaderboardReturnBtn.hidden = true;
-  leaderboardMessage.textContent = "正在读取 Top 100…";
-
-  try {
-    leaderboard = await loadLeaderboard();
-    renderLeaderboard(leaderboard);
-    leaderboardReturnBtn.hidden = false;
-    if (scoreQualifies(leaderboard, game.score)) {
-      leaderboardMessage.textContent = `你的 ${game.score} 分进入 Top 100，请留下名字。`;
-      leaderboardForm.hidden = false;
-      playerNameInput.value = "";
-      playerNameInput.focus();
-    } else {
-      leaderboardMessage.textContent = `你的得分是 ${game.score}，暂未进入 Top 100。`;
-      leaderboardReturnBtn.focus();
-    }
-  } catch (error) {
-    leaderboardMessage.textContent = `${error.message}，请稍后重试。`;
-    leaderboardReturnBtn.hidden = false;
-    leaderboardReturnBtn.focus();
-  }
-}
-
-async function submitLeaderboardEntry(event) {
-  event.preventDefault();
-  const entry = {
-    id: crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`,
-    name: playerNameInput.value.trim().slice(0, 20) || "匿名用户",
-    score: Math.max(0, Math.round(game.score)),
-    createdAt: new Date().toISOString(),
-  };
-  leaderboardSubmitBtn.disabled = true;
-  leaderboardReturnBtn.hidden = true;
-  leaderboardMessage.textContent = "正在保存成绩…";
-
-  try {
-    for (let attempt = 0; attempt < 3; attempt += 1) {
-      const current = await loadLeaderboard();
-      const updated = normalizeLeaderboard({ entries: [...current, entry] });
-      if (!updated.some((item) => item.id === entry.id)) {
-        leaderboard = current;
-        renderLeaderboard(leaderboard);
-        leaderboardMessage.textContent = "榜单刚刚发生变化，你的得分未能进入 Top 100。";
-        return;
-      }
-      await saveLeaderboard(updated);
-      const verified = await loadLeaderboard();
-      if (verified.some((item) => item.id === entry.id)) {
-        submittedEntryId = entry.id;
-        leaderboard = verified;
-        renderLeaderboard(leaderboard);
-        leaderboardForm.hidden = true;
-        leaderboardMessage.textContent = `${entry.name} 已成功上榜。`;
-        return;
-      }
-    }
-    throw new Error("成绩被同时提交的玩家覆盖");
-  } catch (error) {
-    leaderboardMessage.textContent = `${error.message}，请重新确认。`;
-  } finally {
-    leaderboardSubmitBtn.disabled = false;
-    leaderboardReturnBtn.hidden = false;
-  }
+  leaderboardReturnBtn.focus();
 }
 
 function hideLeaderboard() {
@@ -920,9 +857,15 @@ function drawCloth() {
   garmentCtx.clearRect(0, 0, garmentLayer.width, garmentLayer.height);
   garmentCtx.save();
   garmentCtx.translate(garmentLayer.width / 2, garmentLayer.height / 2);
+  drawGarmentPath(garmentCtx);
+  garmentCtx.clip();
 
   if (assets.garment.complete && assets.garment.naturalWidth) {
-    garmentCtx.drawImage(assets.garment, -310, -260, 620, 520);
+    garmentCtx.drawImage(assets.garment, -280, -220, 560, 460);
+    garmentCtx.globalCompositeOperation = "multiply";
+    garmentCtx.fillStyle = `hsl(${game.garment.hue} 48% 68%)`;
+    garmentCtx.fillRect(-310, -260, 620, 520);
+    garmentCtx.globalCompositeOperation = "source-over";
   }
 
   garmentCtx.strokeStyle = "#c9352c";
@@ -1196,7 +1139,6 @@ exitBtn.addEventListener("click", () => {
 });
 
 leaderboardReturnBtn.addEventListener("click", returnToStart);
-leaderboardForm.addEventListener("submit", submitLeaderboardEntry);
 
 nextBtn.addEventListener("click", () => {
   ensureAudio();
