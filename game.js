@@ -29,22 +29,23 @@ const assets = {
   garment: new Image(),
   prisonBars: new Image(),
 };
-function loadOptimizedAsset(image, name) {
+function loadOptimizedAsset(image, name, version = "") {
+  const cacheSuffix = version ? `?v=${version}` : "";
   image.addEventListener(
     "error",
     () => {
-      image.src = `./assets/${name}.png`;
+      image.src = `./assets/${name}.png${cacheSuffix}`;
     },
     { once: true },
   );
-  image.src = `./assets/${name}.webp`;
+  image.src = `./assets/${name}.webp${cacheSuffix}`;
 }
 
 loadOptimizedAsset(assets.machine, "sewing-machine-table");
 loadOptimizedAsset(assets.machineArm, "machine-arm-overlay");
 loadOptimizedAsset(assets.needle, "needle-overlay");
 loadOptimizedAsset(assets.bun, "mantou");
-loadOptimizedAsset(assets.garment, "garment-clean");
+loadOptimizedAsset(assets.garment, "garment-clean", "2");
 loadOptimizedAsset(assets.prisonBars, "prison-bars-realistic");
 const garmentLayer = document.createElement("canvas");
 garmentLayer.width = 620;
