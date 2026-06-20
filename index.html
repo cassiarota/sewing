@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>踩缝纫机</title>
     <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="./style.css?v=13" />
+    <link rel="stylesheet" href="./style.css?v=14" />
   </head>
   <body>
     <main class="game-shell">
@@ -38,7 +38,10 @@
         <div id="modalOverlay" class="modal-overlay" aria-hidden="false">
           <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
             <h2 id="modalTitle">踩缝纫机</h2>
-            <p id="modalMessage">按 WASD 移动布料，按 J / K 踩踏板。</p>
+            <div class="modal-copy">
+              <p id="modalMessage">按 WASD 移动布料，按 J / K 踩踏板。</p>
+              <p id="modalScoringHint">沿着划定的线进行缝纫，偏离越多分数越低。</p>
+            </div>
             <div class="modal-actions">
               <button id="startBtn" type="button">开始游戏</button>
               <button id="exitBtn" type="button" hidden>退出游戏</button>
@@ -81,6 +84,6 @@
       </section>
     </main>
 
-    <script src="./game.js?v=22"></script>
+    <script src="./game.js?v=23"></script>
   </body>
 </html>

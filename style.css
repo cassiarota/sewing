@@ -334,10 +334,18 @@ canvas {
   letter-spacing: 0;
 }
 
-.modal-card p {
+.modal-copy {
   margin: 12px 0 20px;
+}
+
+.modal-copy p {
+  margin: 0;
   color: #dcc7a8;
   line-height: 1.6;
+}
+
+#modalScoringHint {
+  margin-top: 4px;
 }
 
 .modal-actions {

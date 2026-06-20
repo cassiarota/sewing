@@ -8,6 +8,7 @@ const progressText = document.querySelector("#progressText");
 const modalOverlay = document.querySelector("#modalOverlay");
 const modalTitle = document.querySelector("#modalTitle");
 const modalMessage = document.querySelector("#modalMessage");
+const modalScoringHint = document.querySelector("#modalScoringHint");
 const leaderboardOverlay = document.querySelector("#leaderboardOverlay");
 const leaderboardRows = document.querySelector("#leaderboardRows");
 const leaderboardMessage = document.querySelector("#leaderboardMessage");
@@ -329,6 +330,7 @@ function showStartModal() {
   modalMessage.textContent = game.isMobile
     ? "按住衣服滑动方向，交替点 J / K 踩踏板。"
     : "按 WASD 移动布料，交替按住 J / K 踩踏板。";
+  modalScoringHint.hidden = false;
   startBtn.hidden = false;
   exitBtn.hidden = true;
   nextBtn.hidden = true;
@@ -340,6 +342,7 @@ function showStartModal() {
 function showNextModal() {
   modalTitle.textContent = `第 ${game.level} 件完成`;
   modalMessage.textContent = `本关得分 ${game.score}，继续下一关或退出游戏。`;
+  modalScoringHint.hidden = true;
   startBtn.hidden = true;
   exitBtn.hidden = false;
   nextBtn.hidden = false;
